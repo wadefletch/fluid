@@ -12,13 +12,13 @@ for (let i = 0; i < BASE62_ALPHABET.length; i++) {
 /**
  * Decodes a Base62 string back to a BigInt.
  * Validates each character against the Base62 alphabet.
- * 
+ *
  * @example
  * ```ts
  * decodeBase62("3D7") // 12345n
  * decodeBase62("0")   // 0n
  * ```
- * 
+ *
  * @throws {Error} When encountering invalid Base62 characters
  */
 function decodeBase62(str: string): bigint {
@@ -36,13 +36,13 @@ function decodeBase62(str: string): bigint {
 /**
  * Encodes a BigInt to a Base62 string for compact representation.
  * Base62 uses 0-9, A-Z, a-z for encoding, making it URL-safe and human-readable.
- * 
+ *
  * @example
  * ```ts
  * encodeBase62(12345n) // "3D7"
  * encodeBase62(0n)     // "0"
  * ```
- * 
+ *
  * @see https://en.wikipedia.org/wiki/Base62
  */
 function encodeBase62(num: bigint): string {
@@ -59,13 +59,13 @@ function encodeBase62(num: bigint): string {
 /**
  * Generates cryptographically secure random bytes using the Web Crypto API.
  * Cross-platform compatible with browsers, workers, and modern Node.js environments.
- * 
+ *
  * @example
  * ```ts
  * const bytes = getRandomBytes(16); // 16 random bytes
  * console.log(bytes.length); // 16
  * ```
- * 
+ *
  * @throws {Error} If the Crypto API is unavailable in the current environment
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues
  */
@@ -78,7 +78,11 @@ function getRandomBytes(length: number): Uint8Array {
     // Browser, Worker, or modern Node with crypto global
     value = new Uint8Array(length);
     crypto.getRandomValues(value);
-  } else if (typeof globalThis !== "undefined" && globalThis.crypto && globalThis.crypto.getRandomValues) {
+  } else if (
+    typeof globalThis !== "undefined" &&
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    globalThis.crypto.getRandomValues
+  ) {
     // Fallback for different global contexts
     value = new Uint8Array(length);
     globalThis.crypto.getRandomValues(value);
@@ -93,14 +97,14 @@ function getRandomBytes(length: number): Uint8Array {
 /**
  * Generates a UUIDv7 with embedded timestamp for natural sorting.
  * UUIDv7 embeds the current timestamp in the first 48 bits, making IDs sortable by creation time.
- * 
+ *
  * @example
  * ```ts
  * const uuid1 = generateUUIDv7(); // "018a1234-5678-7abc-9def-0123456789ab"
  * const uuid2 = generateUUIDv7(); // "018a1234-5679-7xyz-abcd-fedcba987654"
  * // uuid2 > uuid1 (lexicographically sortable)
  * ```
- * 
+ *
  * @see https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-01.html
  * @see https://antonz.org/uuidv7/#javascript
  */
@@ -134,7 +138,7 @@ function generateUUIDv7(): string {
 /**
  * Converts a UUID to a compact Base62 representation.
  * Removes hyphens and converts the hex string to Base62 for shorter IDs.
- * 
+ *
  * @example
  * ```ts
  * const uuid = "018a1234-5678-7abc-9def-0123456789ab";
@@ -147,13 +151,13 @@ function uuidToBase62(uuid: string): string {
   return encodeBase62(num);
 }
 
-console.log(uuidToBase62("00000000-0000-0000-0000-000000000000"))
-console.log(uuidToBase62("FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"))
+console.log(uuidToBase62("00000000-0000-0000-0000-000000000000"));
+console.log(uuidToBase62("FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"));
 
 /**
  * Converts a Base62 string back to a standard UUID format.
  * Adds hyphens to create the canonical UUID representation.
- * 
+ *
  * @example
  * ```ts
  * const base62 = "1BjQ7hVBYfRnTyNiGfX3z";
@@ -170,7 +174,7 @@ function base62ToUUID(base62: string): string {
 /**
  * Validates if a string matches the standard UUID format.
  * Checks for the exact pattern: 8-4-4-4-12 hexadecimal characters with hyphens.
- * 
+ *
  * @example
  * ```ts
  * isValidUUID("018a1234-5678-7abc-9def-0123456789ab") // true
@@ -188,7 +192,7 @@ function isValidUUID(uuid: string): boolean {
  * Validates a prefix according to naming conventions.
  * Ensures prefixes contain only lowercase alphanumeric characters and underscores.
  * This promotes consistency and prevents issues with case-sensitive systems.
- * 
+ *
  * @example
  * ```ts
  * validatePrefix("user")      // ✓ Valid
@@ -196,7 +200,7 @@ function isValidUUID(uuid: string): boolean {
  * validatePrefix("User")      // ✗ Throws error (uppercase)
  * validatePrefix("api-key")   // ✗ Throws error (hyphen)
  * ```
- * 
+ *
  * @throws {Error} When prefix contains invalid characters
  */
 function validatePrefix(prefix: string): void {
@@ -209,7 +213,7 @@ function validatePrefix(prefix: string): void {
 /**
  * Validates a Base62 string for use as a UUID encoding.
  * Ensures the string contains only valid Base62 characters and has sufficient length for a UUID.
- * 
+ *
  * @example
  * ```ts
  * validateBase62("1BjQ7hVBYfRnTyNiGfX3z") // ✓ Valid
@@ -222,7 +226,7 @@ function validateBase62(base62: string): void {
   if (base62.length === 0) {
     throw new Error(`Empty base62 part`);
   }
-  
+
   if (!/^[0-9a-zA-Z]+$/.test(base62)) {
     throw new Error(`Invalid Base62 character in: ${base62}`);
   }
@@ -231,21 +235,21 @@ function validateBase62(base62: string): void {
 /**
  * Generates a human-readable prefixed ID using UUIDv7 and Base62 encoding.
  * Creates IDs that are naturally sortable by creation time and easy to identify by type.
- * 
+ *
  * @example
  * ```ts
  * generate("user")     // "user_1BjQ7hVBYfRnTyNiGfX3z"
  * generate("api_key")  // "api_key_2CkR8iWCZgSoUzOjHgY4A"
  * generate("order")    // "order_3DlS9jXDahTpVaPkIhZ5B"
  * ```
- * 
+ *
  * Features:
  * - Naturally sortable by creation time (UUIDv7)
  * - Compact representation (Base62)
  * - Type identification via prefix
  * - URL-safe characters only
  * - Maximum length guarantee (≤255 chars)
- * 
+ *
  * @throws {Error} If prefix is invalid or generated ID exceeds 255 characters
  */
 export function generate(prefix: string): string {
@@ -261,19 +265,19 @@ export function generate(prefix: string): string {
 /**
  * Parses a prefixed ID to extract its components.
  * Separates the prefix from the encoded UUID and validates the UUID format.
- * 
+ *
  * @example
  * ```ts
  * const id = "user_1BjQ7hVBYfRnTyNiGfX3z";
  * const { prefix, uuid } = parse(id);
  * // prefix: "user"
  * // uuid: "018a1234-5678-7abc-9def-0123456789ab"
- * 
+ *
  * parse("invalid")           // ✗ Throws error (no underscore)
  * parse("user_")             // ✗ Throws error (empty base62)
  * parse("user_invalid")      // ✗ Throws error (invalid base62)
  * ```
- * 
+ *
  * @throws {Error} If ID format is invalid, base62 part is empty, or UUID is malformed
  */
 export function parse(id: string): { prefix: string; uuid: string } {
@@ -306,12 +310,12 @@ export function parse(id: string): { prefix: string; uuid: string } {
 /**
  * Validates a prefixed ID, optionally against an expected prefix.
  * Useful for type checking IDs in APIs or database operations.
- * 
+ *
  * @example
  * ```ts
  * const userId = "user_1BjQ7hVBYfRnTyNiGfX3z";
  * const apiKeyId = "api_key_2CkR8iWCZgSoUzOjHgY4A";
- * 
+ *
  * validate(userId)             // true (just validates format)
  * validate(userId, "user")     // true
  * validate(userId, "api_key")  // false
