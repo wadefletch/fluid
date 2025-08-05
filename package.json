@@ -1,75 +1,73 @@
 {
-  "name": "human-ids",
+  "name": "fluid",
   "version": "0.0.0",
-  "description": "Cross-platform human-readable ID generation using UUIDv7 and Crockford's Base32 encoding",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "description": "Friendly Labeled Unique Identifiers - Cross-platform human-readable ID generation using UUIDv7 and Base62 encoding",
+  "keywords": [
+    "base62",
+    "fluid",
+    "friendly",
+    "human-readable",
+    "id",
+    "labeled",
+    "unique",
+    "uuid",
+    "uuidv7"
+  ],
+  "repository": "wadefletch/fluid",
+  "license": "MIT",
+  "author": "Wade Fletcher",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "README.md",
     "LICENSE"
   ],
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "sideEffects": false,
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit",
     "changeset": "changeset",
-    "version": "changeset version",
+    "dev": "tsup --watch",
+    "format": "NODE_OPTIONS='--experimental-strip-types' prettier --write .",
+    "lint": "pnpm run lint:types && pnpm run lint:eslint && pnpm run lint:format",
+    "lint:eslint": "eslint .",
+    "lint:eslint:fix": "eslint . --fix",
+    "lint:format": "NODE_OPTIONS='--experimental-strip-types' prettier --check .",
+    "lint:types": "tsc --noEmit",
+    "prepublishOnly": "pnpm run lint && pnpm run build && pnpm run test:run",
     "release": "changeset publish",
-    "prepublishOnly": "pnpm run lint && pnpm run typecheck && pnpm run build && pnpm run test:run"
+    "test": "vitest",
+    "test:bench": "vitest bench",
+    "test:run": "vitest run",
+    "version": "changeset version"
   },
-  "keywords": [
-    "uuid",
-    "uuidv7",
-    "base32",
-    "crockford",
-    "id",
-    "human-readable",
-    "typescript",
-    "cross-platform",
-    "browser",
-    "node",
-    "edge",
-    "workers"
-  ],
-  "author": "",
-  "license": "MIT",
   "devDependencies": {
-    "@changesets/cli": "^2.27.1",
-    "@eslint/js": "^9.0.0",
-    "@types/node": "^20.0.0",
-    "@vitest/coverage-v8": "^1.6.0",
-    "eslint": "^9.0.0",
-    "eslint-config-prettier": "^9.1.0",
-    "prettier": "^3.2.0",
-    "tsup": "^8.0.2",
-    "typescript": "^5.4.0",
-    "typescript-eslint": "^8.0.0",
-    "vitest": "^1.6.0"
+    "@changesets/cli": "^2.29.5",
+    "@eslint/js": "^9.32.0",
+    "@ianvs/prettier-plugin-sort-imports": "^4.5.1",
+    "@prettier/plugin-oxc": "^0.0.4",
+    "@types/node": "^24.2.0",
+    "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.6.2",
+    "prettier-plugin-packagejson": "^2.5.19",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.39.0",
+    "vitest": "^3.2.4"
   },
+  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748",
   "engines": {
     "node": ">=18"
-  },
-  "packageManager": "pnpm@9.0.0",
-  "repository": {
-    "type": "git",
-    "url": ""
   }
 }
