@@ -23,6 +23,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
+
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm run lint:types
@@ -45,6 +46,8 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
 
       - name: Validate current commit with commitlint
         if: github.event_name == 'push'

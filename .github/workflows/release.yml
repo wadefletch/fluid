@@ -25,11 +25,18 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run lint
+
+      - run: pnpm run lint:types
+      - run: pnpm run lint:eslint
+      - run: pnpm run lint:format
+
       - run: pnpm run build
+
       - run: pnpm run test:run
-      - run: pnpm dlx semantic-release
+
+      - run: pnpm semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
