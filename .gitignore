@@ -52,3 +52,7 @@ coverage/
 # Cache
 .cache/
 .parcel-cache/
+
+# Agents
+.claude/
+.cursor
