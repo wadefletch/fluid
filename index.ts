@@ -132,50 +132,13 @@ function isValidUUID(uuid: string): boolean {
 }
 
 
-/**
- * StandardSchema interface implementation
- */
-interface StandardSchemaV1<Input = unknown, Output = Input> {
-  readonly '~standard': {
-    readonly version: 1;
-    readonly vendor: string;
-    readonly validate: (value: unknown) => { success: true; data: Output } | { success: false; issues: Array<{ message: string }> };
-  };
-}
-
-/**
- * Creates a StandardSchema-compatible validator for prefixed IDs
- */
-function createIdSchema<T extends string>(prefix: T): StandardSchemaV1<string, string> {
-  return {
-    '~standard': {
-      version: 1,
-      vendor: 'human-ids',
-      validate: (value: unknown) => {
-        if (typeof value !== 'string') {
-          return { success: false, issues: [{ message: 'Expected string' }] };
-        }
-        
-        try {
-          const parsed = parsePrefixedId(value);
-          if (parsed.prefix !== prefix) {
-            return { success: false, issues: [{ message: `Invalid ${prefix} ID format` }] };
-          }
-          return { success: true, data: value };
-        } catch (error) {
-          return { success: false, issues: [{ message: error instanceof Error ? error.message : 'Invalid ID format' }] };
-        }
-      }
-    }
-  };
-}
 
 /**
  * Generates a prefixed ID using UUIDv7 and Crockford Base32 encoding
  * @param prefix - Prefix for the ID
  * @returns A human-readable prefixed ID
  */
-export function generatePrefixedId(prefix: string): string {
+export function generate(prefix: string): string {
   const uuid = generateUUIDv7();
   const base32 = uuidToCrockfordBase32(uuid);
   const id = `${prefix}_${base32}`;
@@ -193,7 +156,7 @@ export function generatePrefixedId(prefix: string): string {
  * @param id - The prefixed ID to parse
  * @returns Object containing prefix and uuid
  */
-export function parsePrefixedId(id: string): { prefix: string; uuid: string } {
+export function parse(id: string): { prefix: string; uuid: string } {
   const underscoreIndex = id.indexOf('_');
   if (underscoreIndex === -1) {
     throw new Error(`Invalid prefixed ID format: ${id}`);
@@ -221,22 +184,13 @@ export function parsePrefixedId(id: string): { prefix: string; uuid: string } {
  * @param prefix - The expected prefix
  * @returns true if valid, false otherwise
  */
-export function validatePrefixedId(id: string, prefix: string): boolean {
+export function validate(id: string, prefix: string): boolean {
   try {
-    const parsed = parsePrefixedId(id);
+    const parsed = parse(id);
     return parsed.prefix === prefix;
   } catch {
     return false;
   }
-}
-
-/**
- * Creates a StandardSchema-compatible validator for prefixed IDs
- * @param prefix - The expected prefix for validation
- * @returns StandardSchema validator instance
- */
-export function IdSchema<T extends string>(prefix: T): StandardSchemaV1<string, string> {
-  return createIdSchema(prefix);
 }
 
 

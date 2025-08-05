@@ -28,20 +28,20 @@ yarn add human-ids
 ## Quick Start
 
 ```typescript
-import { generatePrefixedId, parsePrefixedId, validatePrefixedId } from 'human-ids';
+import { generate, parse, validate } from 'human-ids';
 
 // Generate IDs with prefixes
-const userId = generatePrefixedId('user');   // user_01HQR7V2M3NG4K8YXJ9WQBR2FG
-const orderId = generatePrefixedId('ord');   // ord_01HQR7V2M3PH5L9ZYK0XRCST3H
+const userId = generate('user');   // user_01HQR7V2M3NG4K8YXJ9WQBR2FG
+const orderId = generate('ord');   // ord_01HQR7V2M3PH5L9ZYK0XRCST3H
 
 // Parse IDs to get prefix and UUID
-const { prefix, uuid } = parsePrefixedId(userId);
+const { prefix, uuid } = parse(userId);
 console.log(prefix); // 'user'
 console.log(uuid);   // '01234567-89ab-7def-8123-456789abcdef'
 
 // Validate IDs against expected prefix
-const isValidUser = validatePrefixedId(userId, 'user'); // true
-const isValidOrder = validatePrefixedId(userId, 'ord'); // false
+const isValidUser = validate(userId, 'user'); // true
+const isValidOrder = validate(userId, 'ord'); // false
 ```
 
 ## Security & Best Practices
@@ -57,7 +57,7 @@ Traditional sequential IDs leak sensitive business information:
 // Attacker knows you have ~1000 users and can enumerate all of them
 
 // ✅ GOOD: Cryptographically secure, impossible to guess
-const userId = generatePrefixedId('user'); // user_01HQR7V2M3NG4K8YXJ9WQBR2FG
+const userId = generate('user'); // user_01HQR7V2M3NG4K8YXJ9WQBR2FG
 ```
 
 ### 📋 **Prefix Naming Guidelines** (Stripe-Inspired)
@@ -66,20 +66,20 @@ Following industry best practices from companies like Stripe:
 
 ```typescript
 // ✅ GOOD: Short, clear prefixes (2-5 characters)
-generatePrefixedId('user');        // user_...
-generatePrefixedId('cust');        // cust_... (customer)
-generatePrefixedId('pay');         // pay_... (payment)
-generatePrefixedId('inv');         // inv_... (invoice)
-generatePrefixedId('ord');         // ord_... (order)
+generate('user');        // user_...
+generate('cust');        // cust_... (customer)
+generate('pay');         // pay_... (payment)
+generate('inv');         // inv_... (invoice)
+generate('ord');         // ord_... (order)
 
 // ✅ GOOD: Standard abbreviations when widely understood
-generatePrefixedId('pi');          // pi_... (payment_intent)
-generatePrefixedId('sub');         // sub_... (subscription)
+generate('pi');          // pi_... (payment_intent)
+generate('sub');         // sub_... (subscription)
 
 // ❌ AVOID: Confusing or unclear abbreviations
-generatePrefixedId('u');           // Too short, unclear
-generatePrefixedId('usr');         // Ambiguous abbreviation
-generatePrefixedId('customer');    // Too long, exceeds 5 characters
+generate('u');           // Too short, unclear
+generate('usr');         // Ambiguous abbreviation
+generate('customer');    // Too long, exceeds 5 characters
 ```
 
 **Best Practices:**
@@ -92,13 +92,13 @@ generatePrefixedId('customer');    // Too long, exceeds 5 characters
 
 This library provides a minimal, focused API with just four essential functions:
 
-### `generatePrefixedId(prefix: string): string`
+### `generate(prefix: string): string`
 
 Generates a prefixed ID using UUIDv7 and Crockford Base32 encoding.
 
 ```typescript
-const userId = generatePrefixedId('user');   // user_01HQR7V2M3NG4K8YXJ9WQBR2FG
-const orderId = generatePrefixedId('ord');   // ord_01HQR7V2M3PH5L9ZYK0XRCST3H
+const userId = generate('user');   // user_01HQR7V2M3NG4K8YXJ9WQBR2FG
+const orderId = generate('ord');   // ord_01HQR7V2M3PH5L9ZYK0XRCST3H
 ```
 
 **Features:**
@@ -107,47 +107,29 @@ const orderId = generatePrefixedId('ord');   // ord_01HQR7V2M3PH5L9ZYK0XRCST3H
 - Cryptographically secure and time-ordered
 - Human-readable with Crockford Base32 encoding
 
-### `parsePrefixedId(id: string): { prefix: string; uuid: string }`
+### `parse(id: string): { prefix: string; uuid: string }`
 
 Parses a prefixed ID to extract the prefix and UUID components.
 
 ```typescript
-const { prefix, uuid } = parsePrefixedId('user_01HQR7V2M3NG4K8YXJ9WQBR2FG');
+const { prefix, uuid } = parse('user_01HQR7V2M3NG4K8YXJ9WQBR2FG');
 console.log(prefix); // 'user'
 console.log(uuid);   // '01234567-89ab-7def-8123-456789abcdef'
 
 // Extract just what you need with destructuring
-const { uuid } = parsePrefixedId(userId);        // Get UUID only
-const { prefix } = parsePrefixedId(userId);      // Get prefix only
+const { uuid } = parse(userId);        // Get UUID only
+const { prefix } = parse(userId);      // Get prefix only
 ```
 
-### `validatePrefixedId(id: string, prefix: string): boolean`
+### `validate(id: string, prefix: string): boolean`
 
 Validates that an ID has the correct prefix and format.
 
 ```typescript
-const userId = generatePrefixedId('user');
-validatePrefixedId(userId, 'user');    // true
-validatePrefixedId(userId, 'admin');   // false
-validatePrefixedId('invalid', 'user'); // false
-```
-
-### `IdSchema<T>(prefix: T): StandardSchemaV1<string, string>`
-
-Creates a StandardSchema-compatible validator for use with modern validation libraries.
-
-```typescript
-import { IdSchema } from 'human-ids';
-
-const userIdSchema = IdSchema('user');
-
-// Use with any StandardSchema-compatible library
-const result = userIdSchema['~standard'].validate('user_01HQR7V2M3NG4K8YXJ9WQBR2FG');
-if (result.success) {
-  console.log('Valid ID:', result.data);
-} else {
-  console.log('Validation errors:', result.issues);
-}
+const userId = generate('user');
+validate(userId, 'user');    // true
+validate(userId, 'admin');   // false
+validate('invalid', 'user'); // false
 ```
 
 ## Cross-Platform Compatibility
@@ -211,7 +193,7 @@ When reading from the database, reconstruct the prefixed ID as needed:
 const userRecord = await db.users.findById(uuid);
 
 // Reconstruct prefixed ID for API responses using internal library logic
-// (The encoding is handled internally by generatePrefixedId)
+// (The encoding is handled internally by generate)
 const user = {
   id: `user_${/* base32 encoded UUID from userRecord.id */}`,
   email: userRecord.email,
