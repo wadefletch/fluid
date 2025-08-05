@@ -32,3 +32,28 @@ jobs:
       - run: pnpm run build
 
       - run: pnpm run test:run
+
+  commitlint:
+    name: commitlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Validate current commit with commitlint
+        if: github.event_name == 'push'
+        run: pnpm dlx commitlint --last --verbose
+
+      - name: Validate all PR commits with commitlint
+        if: github.event_name == 'pull_request'
+        run: pnpm dlx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+      - name: Validate PR title with commitlint
+        if: github.event_name == 'pull_request'
+        run: pnpm dlx commitlint --title ${{ github.event.pull_request.title }} --verbose
