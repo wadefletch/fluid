@@ -1,7 +1,7 @@
 {
-  "name": "fluid",
+  "name": "@wadefletch/fluid",
   "version": "0.0.0",
-  "description": "Friendly Labeled Unique Identifiers - Cross-platform human-readable ID generation using UUIDv7 and Base62 encoding",
+  "description": "Generate time-ordered prefixed IDs like `user_1BjQ7hVBYfRnTyNiGfX3z` and `order_2CkR8iWCZgSoUzOjHgY4A` using UUIDv7 and Base62 encoding.",
   "keywords": [
     "base62",
     "fluid",
