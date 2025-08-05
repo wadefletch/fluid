@@ -28,23 +28,20 @@ yarn add human-ids
 ## Quick Start
 
 ```typescript
-import { generatePrefixedId, parsePrefixedId, handleIdByPrefix } from 'human-ids';
+import { generatePrefixedId, parsePrefixedId, validatePrefixedId } from 'human-ids';
 
 // Generate IDs with prefixes
 const userId = generatePrefixedId('user');   // user_01HQR7V2M3NG4K8YXJ9WQBR2FG
-const orderId = generatePrefixedId('order'); // order_01HQR7V2M3PH5L9ZYK0XRCST3H
+const orderId = generatePrefixedId('ord');   // ord_01HQR7V2M3PH5L9ZYK0XRCST3H
 
 // Parse IDs to get prefix and UUID
 const { prefix, uuid } = parsePrefixedId(userId);
 console.log(prefix); // 'user'
 console.log(uuid);   // '01234567-89ab-7def-8123-456789abcdef'
 
-// Polymorphic lookups based on prefix
-const result = handleIdByPrefix(userId, {
-  user: (uuid) => fetchUser(uuid),
-  order: (uuid) => fetchOrder(uuid),
-  product: (uuid) => fetchProduct(uuid),
-});
+// Validate IDs against expected prefix
+const isValidUser = validatePrefixedId(userId, 'user'); // true
+const isValidOrder = validatePrefixedId(userId, 'ord'); // false
 ```
 
 ## Security & Best Practices
@@ -68,19 +65,21 @@ const userId = generatePrefixedId('user'); // user_01HQR7V2M3NG4K8YXJ9WQBR2FG
 Following industry best practices from companies like Stripe:
 
 ```typescript
-// ✅ GOOD: Clear, descriptive prefixes
+// ✅ GOOD: Short, clear prefixes (2-5 characters)
 generatePrefixedId('user');        // user_...
-generatePrefixedId('customer');    // customer_...
-generatePrefixedId('payment');     // payment_...
-generatePrefixedId('invoice');     // invoice_...
+generatePrefixedId('cust');        // cust_... (customer)
+generatePrefixedId('pay');         // pay_... (payment)
+generatePrefixedId('inv');         // inv_... (invoice)
+generatePrefixedId('ord');         // ord_... (order)
 
-// ✅ GOOD: Consistent abbreviations when needed
+// ✅ GOOD: Standard abbreviations when widely understood
 generatePrefixedId('pi');          // pi_... (payment_intent)
 generatePrefixedId('sub');         // sub_... (subscription)
 
 // ❌ AVOID: Confusing or unclear abbreviations
 generatePrefixedId('u');           // Too short, unclear
 generatePrefixedId('usr');         // Ambiguous abbreviation
+generatePrefixedId('customer');    // Too long, exceeds 5 characters
 ```
 
 **Best Practices:**
@@ -91,104 +90,51 @@ generatePrefixedId('usr');         // Ambiguous abbreviation
 
 ## API Reference
 
-### Core Functions
+This library provides a minimal, focused API with just four essential functions:
 
-#### `generatePrefixedId(prefix: string): string`
+### `generatePrefixedId(prefix: string): string`
 
 Generates a prefixed ID using UUIDv7 and Crockford Base32 encoding.
 
 ```typescript
-const id = generatePrefixedId('user'); // user_01HQR7V2M3NG4K8YXJ9WQBR2FG
+const userId = generatePrefixedId('user');   // user_01HQR7V2M3NG4K8YXJ9WQBR2FG
+const orderId = generatePrefixedId('ord');   // ord_01HQR7V2M3PH5L9ZYK0XRCST3H
 ```
 
-**Constraints:**
+**Features:**
 - Any prefix is allowed (no character restrictions)
 - Generated ID never exceeds 255 characters
+- Cryptographically secure and time-ordered
+- Human-readable with Crockford Base32 encoding
 
-#### `parsePrefixedId(id: string): { prefix: string; uuid: string }`
+### `parsePrefixedId(id: string): { prefix: string; uuid: string }`
 
-Parses a prefixed ID to extract the prefix and UUID.
+Parses a prefixed ID to extract the prefix and UUID components.
 
 ```typescript
 const { prefix, uuid } = parsePrefixedId('user_01HQR7V2M3NG4K8YXJ9WQBR2FG');
+console.log(prefix); // 'user'
+console.log(uuid);   // '01234567-89ab-7def-8123-456789abcdef'
+
+// Extract just what you need with destructuring
+const { uuid } = parsePrefixedId(userId);        // Get UUID only
+const { prefix } = parsePrefixedId(userId);      // Get prefix only
 ```
 
-#### `validatePrefixedId(id: string, prefix: string): boolean`
+### `validatePrefixedId(id: string, prefix: string): boolean`
 
 Validates that an ID has the correct prefix and format.
 
 ```typescript
-const isValid = validatePrefixedId('user_01HQR7V2M3NG4K8YXJ9WQBR2FG', 'user'); // true
+const userId = generatePrefixedId('user');
+validatePrefixedId(userId, 'user');    // true
+validatePrefixedId(userId, 'admin');   // false
+validatePrefixedId('invalid', 'user'); // false
 ```
 
-#### `extractUUID(id: string): string`
+### `IdSchema<T>(prefix: T): StandardSchemaV1<string, string>`
 
-Extracts just the UUID portion from a prefixed ID.
-
-```typescript
-const uuid = extractUUID('user_01HQR7V2M3NG4K8YXJ9WQBR2FG');
-```
-
-#### `extractPrefix(id: string): string`
-
-Extracts just the prefix portion from a prefixed ID.
-
-```typescript
-const prefix = extractPrefix('user_01HQR7V2M3NG4K8YXJ9WQBR2FG'); // 'user'
-```
-
-### Polymorphic ID Utilities
-
-#### `handleIdByPrefix<T>(id: string, handlers: T): ReturnType<T[keyof T]> | null`
-
-Route ID handling based on prefix - perfect for polymorphic lookups.
-
-```typescript
-const result = handleIdByPrefix('user_01HQR7V2M3NG4K8YXJ9WQBR2FG', {
-  user: (uuid) => getUserById(uuid),
-  order: (uuid) => getOrderById(uuid),
-  product: (uuid) => getProductById(uuid),
-});
-// Automatically calls getUserById with the UUID portion
-```
-
-#### `hasPrefix<T>(id: string, prefix: T): id is \`${T}_${string}\``
-
-Type-safe prefix checking with TypeScript type guards.
-
-```typescript
-if (hasPrefix(someId, 'user')) {
-  // TypeScript knows someId is of type `user_${string}`
-  console.log('This is a user ID');
-}
-```
-
-### Validation Utilities
-
-#### `isValidPrefixedId(id: string): boolean`
-
-Validates if a string matches the general prefixed ID format.
-
-```typescript
-isValidPrefixedId('user_01HQR7V2M3NG4K8YXJ9WQBR2FG'); // true
-isValidPrefixedId('invalid'); // false
-```
-
-#### `getIdPattern(prefix: string): RegExp`
-
-Gets a regex pattern for validating IDs with a specific prefix.
-
-```typescript
-const userIdPattern = getIdPattern('user');
-userIdPattern.test('user_01HQR7V2M3NG4K8YXJ9WQBR2FG'); // true
-userIdPattern.test('admin_01HQR7V2M3NG4K8YXJ9WQBR2FG'); // false
-```
-
-### Validation (StandardSchema)
-
-#### `IdSchema<T>(prefix: T): StandardSchemaV1<string, string>`
-
-Creates a StandardSchema-compatible validator for prefixed IDs.
+Creates a StandardSchema-compatible validator for use with modern validation libraries.
 
 ```typescript
 import { IdSchema } from 'human-ids';
@@ -199,35 +145,10 @@ const userIdSchema = IdSchema('user');
 const result = userIdSchema['~standard'].validate('user_01HQR7V2M3NG4K8YXJ9WQBR2FG');
 if (result.success) {
   console.log('Valid ID:', result.data);
+} else {
+  console.log('Validation errors:', result.issues);
 }
 ```
-
-### Utility Functions
-
-#### `generateUUIDv7(): string`
-
-Generates a cryptographically secure UUIDv7.
-
-```typescript
-const uuid = generateUUIDv7(); // 01234567-89ab-7def-8123-456789abcdef
-```
-
-#### `isValidUUID(uuid: string): boolean`
-
-Validates UUID format.
-
-```typescript
-const isValid = isValidUUID('01234567-89ab-7def-8123-456789abcdef'); // true
-```
-
-### Encoding Functions
-
-#### `encodeCrockfordBase32(num: bigint): string`
-#### `decodeCrockfordBase32(str: string): bigint`
-#### `uuidToCrockfordBase32(uuid: string): string`
-#### `crockfordBase32ToUuid(base32: string): string`
-
-Low-level encoding utilities for advanced use cases.
 
 ## Cross-Platform Compatibility
 
@@ -261,68 +182,57 @@ Crockford's Base32 is superior to Base64 for human-readable IDs:
 
 ## Database Integration
 
-### Store Full Prefixed IDs
+### Recommended Storage Pattern
 
-Store the complete prefixed ID in your database for consistency and ease of use:
+Store only the UUID portion in your database, not the full prefixed ID. The prefix can be inferred from the table name or context:
 
 ```sql
--- ✅ GOOD: Store full prefixed ID
+-- ✅ RECOMMENDED: Store only UUID, infer prefix from context
 CREATE TABLE users (
-  id VARCHAR(255) PRIMARY KEY, -- 'user_01HQR7V2M3NG4K8YXJ9WQBR2FG'
+  id UUID PRIMARY KEY,                    -- '01234567-89ab-7def-8123-456789abcdef'
   email VARCHAR(255) NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- ❌ AVOID: Separating prefix and ID complicates queries
-CREATE TABLE users (
-  prefix VARCHAR(10),
-  uuid_part VARCHAR(245),
-  -- ... more complex to work with
+CREATE TABLE orders (
+  id UUID PRIMARY KEY,                    -- '01234567-89ab-7def-8123-456789abcdef'  
+  user_id UUID REFERENCES users(id),
+  total DECIMAL(10,2),
+  created_at TIMESTAMP DEFAULT NOW()
 );
 ```
 
-### Example Usage with Popular ORMs
+### Working with Database Records
 
-#### Prisma
+When reading from the database, reconstruct the prefixed ID as needed:
+
 ```typescript
-// schema.prisma
-model User {
-  id    String @id @default("user_" + uuid())
-  email String @unique
-}
+// Database query returns raw UUID
+const userRecord = await db.users.findById(uuid);
 
-// Usage
-const user = await prisma.user.create({
-  data: {
-    id: generatePrefixedId('user'),
-    email: 'user@example.com'
-  }
-});
+// Reconstruct prefixed ID for API responses using internal library logic
+// (The encoding is handled internally by generatePrefixedId)
+const user = {
+  id: `user_${/* base32 encoded UUID from userRecord.id */}`,
+  email: userRecord.email,
+  // ... other fields
+};
+
+// For polymorphic relationships, store the full prefixed ID
+CREATE TABLE activities (
+  id UUID PRIMARY KEY,
+  subject_id VARCHAR(255),               -- 'user_01HQR7V2M3NG4K8YXJ9WQBR2FG' or 'ord_01HQR7V2M3PH5L9ZYK0XRCST3H'
+  action VARCHAR(50),
+  created_at TIMESTAMP DEFAULT NOW()
+);
 ```
 
-#### TypeORM
-```typescript
-@Entity()
-export class User {
-  @PrimaryColumn()
-  id: string = generatePrefixedId('user');
-  
-  @Column()
-  email: string;
-}
-```
+### Benefits of This Approach
 
-#### Sequelize
-```typescript
-const User = sequelize.define('User', {
-  id: {
-    type: DataTypes.STRING(255),
-    primaryKey: true,
-    defaultValue: () => generatePrefixedId('user')
-  },
-  email: DataTypes.STRING
-});
-```
+- **Storage efficiency**: UUIDs use less space than full prefixed strings
+- **Database performance**: Native UUID types are optimized for indexing and queries  
+- **Flexibility**: Easy to change prefix conventions without database migrations
+- **Clean separation**: Business logic (prefixes) separate from storage layer
 
 ## Development
 

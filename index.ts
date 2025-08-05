@@ -131,23 +131,6 @@ function isValidUUID(uuid: string): boolean {
   return uuidRegex.test(uuid);
 }
 
-/**
- * Validates if a string matches the prefixed ID format
- */
-function isValidPrefixedIdFormat(id: string): boolean {
-  // Matches any prefix followed by underscore and Crockford Base32 characters
-  const prefixedIdRegex = /^.+_[0-9A-Z]+$/;
-  return prefixedIdRegex.test(id);
-}
-
-/**
- * Gets the regex pattern for validating IDs with a specific prefix
- */
-function getIdRegexPattern(prefix: string): RegExp {
-  // Escape special regex characters in prefix
-  const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`^${escapedPrefix}_[0-9A-Z]+$`);
-}
 
 /**
  * StandardSchema interface implementation
@@ -233,15 +216,6 @@ export function parsePrefixedId(id: string): { prefix: string; uuid: string } {
 }
 
 /**
- * Creates a StandardSchema-compatible validator for prefixed IDs
- * @param prefix - The expected prefix for validation
- * @returns StandardSchema validator instance
- */
-export function IdSchema<T extends string>(prefix: T): StandardSchemaV1<string, string> {
-  return createIdSchema(prefix);
-}
-
-/**
  * Validates a prefixed ID against a specific prefix
  * @param id - The ID to validate
  * @param prefix - The expected prefix
@@ -257,83 +231,12 @@ export function validatePrefixedId(id: string, prefix: string): boolean {
 }
 
 /**
- * Validates if a string matches the general prefixed ID format
- * @param id - The ID to validate
- * @returns true if valid format, false otherwise
+ * Creates a StandardSchema-compatible validator for prefixed IDs
+ * @param prefix - The expected prefix for validation
+ * @returns StandardSchema validator instance
  */
-export function isValidPrefixedId(id: string): boolean {
-  return isValidPrefixedIdFormat(id);
+export function IdSchema<T extends string>(prefix: T): StandardSchemaV1<string, string> {
+  return createIdSchema(prefix);
 }
 
-/**
- * Gets a regex pattern for validating IDs with a specific prefix
- * @param prefix - The prefix to create pattern for
- * @returns RegExp pattern for validation
- */
-export function getIdPattern(prefix: string): RegExp {
-  return getIdRegexPattern(prefix);
-}
 
-/**
- * Extracts just the UUID portion from a prefixed ID
- * @param id - The prefixed ID
- * @returns The UUID string
- */
-export function extractUUID(id: string): string {
-  const parsed = parsePrefixedId(id);
-  return parsed.uuid;
-}
-
-/**
- * Extracts the prefix from a prefixed ID
- * @param id - The prefixed ID
- * @returns The prefix string
- */
-export function extractPrefix(id: string): string {
-  const parsed = parsePrefixedId(id);
-  return parsed.prefix;
-}
-
-/**
- * Type guard to check if an ID has a specific prefix
- * @param id - The ID to check
- * @param prefix - The expected prefix
- * @returns Type predicate for the specific prefix
- */
-export function hasPrefix<T extends string>(id: string, prefix: T): id is `${T}_${string}` {
-  return validatePrefixedId(id, prefix);
-}
-
-/**
- * Utility for polymorphic ID lookups based on prefix
- * @param id - The prefixed ID
- * @param handlers - Object mapping prefixes to handler functions
- * @returns Result from the matching handler
- */
-export function handleIdByPrefix<T extends Record<string, (uuid: string) => any>>(
-  id: string,
-  handlers: T
-): ReturnType<T[keyof T]> | null {
-  try {
-    const { prefix, uuid } = parsePrefixedId(id);
-    const handler = handlers[prefix];
-    
-    if (handler) {
-      return handler(uuid);
-    }
-    
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-// Export utility functions for advanced use cases
-export { 
-  generateUUIDv7,
-  encodeCrockfordBase32,
-  decodeCrockfordBase32,
-  uuidToCrockfordBase32,
-  crockfordBase32ToUuid,
-  isValidUUID
-};
