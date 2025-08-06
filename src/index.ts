@@ -151,9 +151,6 @@ function uuidToBase62(uuid: string): string {
   return encodeBase62(num);
 }
 
-console.log(uuidToBase62("00000000-0000-0000-0000-000000000000"));
-console.log(uuidToBase62("FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"));
-
 /**
  * Converts a Base62 string back to a standard UUID format.
  * Adds hyphens to create the canonical UUID representation.
@@ -331,4 +328,48 @@ export function validate(id: string, prefix?: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Builds a human-readable id from a prefix and UUIDv7.
+ *
+ * Used when displaying a UUID that is read from the database.
+ * This is the inverse of `parse`.
+ *
+ * @example
+ * ```ts
+ * const uuid = "018a1234-5678-7abc-9def-0123456789ab";
+ * const id = build(prefix, uuid); // "user_1BjQ7hVBYfRnTyNiGfX3z"
+ * ```
+ */
+export function build(prefix: string, uuid: string): string {
+  return `${prefix}_${uuidToBase62(uuid)}`;
+}
+
+/**
+ * Extracts the timestamp from a prefixed ID as a JavaScript Date object.
+ * The timestamp is embedded in the UUIDv7 portion of the ID and represents
+ * the time when the ID was generated.
+ *
+ * @example
+ * ```ts
+ * const userId = generate("user");
+ * const timestamp = timestamp(userId);
+ * console.log(timestamp); // 2024-01-15T10:30:45.123Z
+ *
+ * // Works with any valid prefixed ID
+ * const orderId = "order_1BjQ7hVBYfRnTyNiGfX3z";
+ * const orderTime = timestamp(orderId);
+ * ```
+ *
+ * @throws {Error} If the ID format is invalid or cannot be parsed
+ */
+export function timestamp(id: string): Date {
+  const { uuid } = parse(id);
+
+  // Extract timestamp from UUIDv7 (first 48 bits / 12 hex characters)
+  const timestampHex = uuid.replace(/-/g, "").slice(0, 12);
+  const timestampMs = parseInt(timestampHex, 16);
+
+  return new Date(timestampMs);
 }

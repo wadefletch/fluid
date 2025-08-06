@@ -14,7 +14,7 @@ _**F**riendly **L**abeled **U**nique **Id**entifiers_
 Generate time-ordered prefixed IDs like `user_1BjQ7hVBYfRnTyNiGfX3z` and `order_2CkR8iWCZgSoUzOjHgY4A` using UUIDv7 and Base62 encoding.
 
 ```typescript
-import { generate, parse, validate } from "@wadefletch/fluid";
+import { build, generate, parse, timestamp, validate } from "@wadefletch/fluid";
 
 // Generate time-ordered IDs with meaningful prefixes
 const userId = generate("user"); // user_1BjQ7hVBYfRnTyNiGfX3z
@@ -24,6 +24,12 @@ const orderId = generate("order"); // order_2CkR8iWCZgSoUzOjHgY4A
 const { prefix, uuid } = parse(userId);
 console.log(prefix); // "user"
 console.log(uuid); // "018a1234-5678-7abc-9def-0123456789ab"
+
+// Build ID from prefix and UUID (useful when reading from database)
+const rebuiltId = build("user", uuid); // user_1BjQ7hVBYfRnTyNiGfX3z
+
+// Extract timestamp from ID
+const createdAt = timestamp(userId); // Date object
 
 // Validate format and prefix
 validate(userId, "user"); // true
@@ -41,7 +47,7 @@ npm install @wadefletch/fluid
 ### Generating IDs
 
 ```typescript
-import { generate, parse, validate } from "@wadefletch/fluid";
+import { build, generate, parse, timestamp, validate } from "@wadefletch/fluid";
 
 // Generate IDs with meaningful prefixes
 const userId = generate("user"); // user_1BjQ7hVBYfRnTyNiGfX3z
@@ -57,6 +63,26 @@ const { prefix, uuid } = parse(id);
 
 console.log(prefix); // "user"
 console.log(uuid); // "018a1234-5678-7abc-9def-0123456789ab"
+```
+
+### Building IDs from Components
+
+```typescript
+// Build ID from prefix and UUID (useful when reading from database)
+const uuid = "018a1234-5678-7abc-9def-0123456789ab";
+const userId = build("user", uuid); // user_1BjQ7hVBYfRnTyNiGfX3z
+```
+
+### Extracting Timestamps
+
+```typescript
+// Get the creation timestamp from any ID
+const userId = generate("user");
+const createdAt = timestamp(userId); // Date object
+console.log(createdAt); // 2024-01-15T10:30:45.123Z
+
+// Works with any valid prefixed ID
+const orderTime = timestamp("order_1BjQ7hVBYfRnTyNiGfX3z");
 ```
 
 ### Validation
@@ -115,8 +141,12 @@ await db.users.create({
   email: "user@example.com",
 });
 
+// When reading from database, rebuild the prefixed ID
+const dbUser = await db.users.findUnique({ where: { id: uuid } });
+const publicId = build("user", dbUser.id); // user_1BjQ7hVBYfRnTyNiGfX3z
+
 // Return prefixed ID in API responses
-return { id: userId, email: "user@example.com" };
+return { id: publicId, email: dbUser.email };
 ```
 
 ### Database Schema

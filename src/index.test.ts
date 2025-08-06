@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generate, parse, validate } from "./index";
+import { generate, parse, validate, timestamp } from "./index";
 
 describe("generate", () => {
   describe("format and length", () => {
@@ -350,5 +350,62 @@ describe("cross-platform compatibility", () => {
     for (let i = 1; i < timestamps.length; i++) {
       expect(timestamps[i]).toBeGreaterThanOrEqual(timestamps[i - 1]);
     }
+  });
+});
+
+describe("timestamp", () => {
+  it("extracts correct timestamp from generated prefixed ID", () => {
+    const startTime = Date.now();
+    const id = generate("test");
+    const endTime = Date.now();
+
+    const ts = timestamp(id);
+
+    expect(ts).toBeInstanceOf(Date);
+    expect(ts.getTime()).toBeGreaterThanOrEqual(startTime);
+    expect(ts.getTime()).toBeLessThanOrEqual(endTime);
+  });
+
+  it("returns consistent timestamp for same ID", () => {
+    const id = generate("consistent");
+    const timestamp1 = timestamp(id);
+    const timestamp2 = timestamp(id);
+
+    expect(timestamp1.getTime()).toBe(timestamp2.getTime());
+  });
+
+  it("throws for invalid prefixed ID", () => {
+    expect(() => timestamp("invalid")).toThrow();
+    expect(() => timestamp("test_invalid!")).toThrow();
+    expect(() => timestamp("")).toThrow();
+  });
+
+  it("works with different prefix types", () => {
+    const userTime = Date.now();
+    const userId = generate("user");
+    const apiKeyId = generate("api_key");
+
+    const userTimestamp = timestamp(userId);
+    const apiKeyTimestamp = timestamp(apiKeyId);
+
+    expect(userTimestamp).toBeInstanceOf(Date);
+    expect(apiKeyTimestamp).toBeInstanceOf(Date);
+    expect(Math.abs(userTimestamp.getTime() - userTime)).toBeLessThan(100);
+    expect(Math.abs(apiKeyTimestamp.getTime() - userTime)).toBeLessThan(100);
+  });
+
+  it("maintains temporal ordering between different IDs", () => {
+    const id1 = generate("first");
+    // Small delay to ensure different timestamp
+    const start = Date.now();
+    while (Date.now() - start < 2) {
+      // Busy wait
+    }
+    const id2 = generate("second");
+
+    const timestamp1 = timestamp(id1);
+    const timestamp2 = timestamp(id2);
+
+    expect(timestamp2.getTime()).toBeGreaterThanOrEqual(timestamp1.getTime());
   });
 });
