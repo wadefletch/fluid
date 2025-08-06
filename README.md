@@ -1,5 +1,7 @@
 # Fluid
 
+_**F**riendly **L**abeled **U**nique **Id**entifiers_
+
 [![npm](https://img.shields.io/npm/v/@wadefletch/fluid?color=gray&label=%20&logo=npm)][npm]
 [![includes TypeScript types](https://img.shields.io/npm/types/@wadefletch/fluid?color=333&label=%20&logo=typescript&logoColor=58baee)][typescript]
 ![node-current](https://img.shields.io/node/v/@wadefletch/fluid?color=444&label=%20&logo=node.js)
@@ -73,21 +75,6 @@ validate(userId, "admin"); // false
 validate("not-an-id"); // false
 ```
 
-### TypeScript Support
-
-Fluid includes comprehensive TypeScript types:
-
-```typescript
-interface ParseResult {
-  prefix: string;
-  uuid: string;
-}
-
-function generate(prefix: string): string;
-function parse(id: string): ParseResult;
-function validate(id: string, prefix?: string): boolean;
-```
-
 ## Features
 
 - **Time-ordered**: IDs sort chronologically using UUIDv7
@@ -151,7 +138,9 @@ CREATE TABLE activities (
 );
 ```
 
-# References
+## References
 
 - [ui7](https://github.com/silverlyra/ui7)
 - [UUIDv7 in 33 languages](https://antonz.org/uuidv7/#javascript)
+- [Designing APIs for humans: Object IDs](https://dev.to/stripe/designing-apis-for-humans-object-ids-3o5a)
+- [Stripe keys and IDs](https://gist.github.com/fnky/76f533366f75cf75802c8052b577e2a5)
